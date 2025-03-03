@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import MoodVibe from './MoodVibe';
 import MoodPulse from './MoodPulse';
 import MoodChallenge from './MoodChallenge';
 import MoodJournal from './MoodJournal';
+import FeaturedBadges from './FeaturedBadges';
 
 type FeatureModalProps = {
   isOpen: boolean;
@@ -58,6 +59,7 @@ const FeatureModal: React.FC<FeatureModalProps> = ({ isOpen, onClose, title, emo
 
 const LandingPage: React.FC = () => {
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [showProgressPopup, setShowProgressPopup] = useState(true);
 
   const openModal = (modalName: string) => {
     setActiveModal(modalName);
@@ -66,260 +68,83 @@ const LandingPage: React.FC = () => {
   const closeModal = () => {
     setActiveModal(null);
   };
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50 pb-20 md:pb-0">
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="text-center mb-16 relative z-10">
-          <motion.h1 
-            className="text-3xl md:text-4xl font-extrabold mb-8 bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500 text-transparent bg-clip-text drop-shadow-sm leading-tight"
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ 
-              type: "spring", 
-              stiffness: 100, 
-              damping: 10, 
-              delay: 0.2 
-            }}
-            whileHover={{ scale: 1.02 }}
-          >
-           
-           
-            
-          </motion.h1>
           <motion.div 
             className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-medium mb-12 relative group"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 50, delay: 0.5 }}
           >
-            <div className="flex flex-col sm:flex-row items-center justify-center space-y-8 sm:space-y-0 sm:space-x-10">
-              <motion.div 
-                className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                transition={{ type: "spring", stiffness: 300, damping: 15 }}
-              >
-                {/* Glow effect behind the circle */}
-                <motion.div 
-                  className="absolute inset-0 rounded-full blur-md z-0"
-                  animate={{ 
-                    opacity: [0.4, 0.7, 0.4],
-                    scale: [0.85, 0.9, 0.85],
-                  }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity,
-                    ease: "easeInOut" 
-                  }}
-                  style={{ background: "radial-gradient(circle, rgba(79,70,229,0.6) 0%, rgba(79,70,229,0) 70%)" }}
-                />
-                <svg className="transform -rotate-90 w-full h-full relative z-10" viewBox="0 0 100 100">
-                  {/* Background circle with subtle pulse */}
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    className="stroke-current text-gray-200"
-                    strokeWidth="8"
-                    fill="transparent"
-                    animate={{ 
-                      opacity: [0.7, 1, 0.7],
-                    }}
-                    transition={{ 
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: "easeInOut"
-                    }}
-                  />
-                  {/* Progress circle with gradient and glow */}
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    className="stroke-current text-primary-500"
-                    strokeWidth="8"
-                    fill="transparent"
-                    initial={{ pathLength: 0 }}
-                    animate={{ 
-                      pathLength: 0.60,
-                      rotate: 360
-                    }}
-                    transition={{ 
-                      pathLength: { duration: 2.5, ease: "easeOut" },
-                      rotate: { duration: 8, ease: "easeInOut", repeat: Infinity }
-                    }}
-                    strokeLinecap="round"
-                    style={{ filter: "drop-shadow(0 0 3px rgba(79,70,229,0.7))" }}
-                  />
-                </svg>
-                <motion.div 
-                  className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-bold"
-                  initial={{ scale: 0.8 }}
-                  animate={{ 
-                    scale: [0.9, 1.05, 0.9],
-                    textShadow: ["0 0 5px rgba(79,70,229,0)", "0 0 10px rgba(79,70,229,0.5)", "0 0 5px rgba(79,70,229,0)"],
-                  }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity,
-                    ease: "easeInOut" 
-                  }}
+            {/* Progress Popup */}
+            <AnimatePresence>
+              {showProgressPopup && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="fixed top-4 right-4 z-50 max-w-md w-full bg-white rounded-xl shadow-xl p-6 border border-primary-100"
                 >
-                  <span className="bg-gradient-to-br from-primary-500 via-purple-500 to-primary-600 text-transparent bg-clip-text">60%</span>
-                </motion.div>
-                {/* Particle dots around the circle */}
-                {[...Array(8)].map((_, i) => (
-                  <motion.div
-                    key={i}
-                    className="absolute w-1.5 h-1.5 rounded-full bg-primary-400"
-                    style={{ 
-                      left: `${50 + 45 * Math.cos(i * Math.PI / 4)}%`, 
-                      top: `${50 + 45 * Math.sin(i * Math.PI / 4)}%`,
-                    }}
-                    animate={{ 
-                      scale: [0, 1, 0],
-                      opacity: [0, 0.8, 0]
-                    }}
-                    transition={{ 
-                      duration: 2,
-                      delay: i * 0.25,
-                      repeat: Infinity,
-                      repeatDelay: 1
-                    }}
-                  />
-                ))}
-              </motion.div>
-              
-              <motion.div 
-                className="text-center sm:text-left"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                <motion.h4 
-                  className="text-lg sm:text-xl font-bold text-primary-600 mb-3"
-                  whileHover={{ x: 5 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                >
-                  Votre Impact Aujourd'hui
-                </motion.h4>
-                <div className="space-y-3">                  <motion.div 
-                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 relative overflow-hidden"
-                    whileHover={{ 
-                      scale: 1.02, 
-                      boxShadow: "0 8px 20px rgba(79,70,229,0.15)",
-                      backgroundColor: "rgba(255,255,255,0.9)"
-                    }}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20
-                    }}
+                  <button
+                    onClick={() => setShowProgressPopup(false)}
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
                   >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-primary-100/30 to-transparent"
-                      animate={{
-                        opacity: [0.3, 0.5, 0.3],
-                        backgroundPosition: ["200% 0", "-200% 0"]
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
-                      style={{ backgroundSize: "200% 100%" }}
-                    />
-                    <motion.span 
-                      className="text-2xl relative z-10"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        filter: ["drop-shadow(0 0 0px rgba(79,70,229,0))", "drop-shadow(0 0 3px rgba(79,70,229,0.5))", "drop-shadow(0 0 0px rgba(79,70,229,0))"],
-                      }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >🎯 </motion.span>
-                    <div className="relative z-10">
-                      <div className="font-semibold text-gray-800 text-sm sm:text-base">5 interactions</div>
-                      <div className="text-sm text-gray-600">Objectif quotidien</div>
-                    </div>
-                  </motion.div>
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                   
-                  <motion.div 
-                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 relative overflow-hidden"
-                    whileHover={{ 
-                      scale: 1.02, 
-                      boxShadow: "0 8px 20px rgba(236,72,153,0.15)",
-                      backgroundColor: "rgba(255,255,255,0.9)"
-                    }}
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ 
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                      delay: 0.1
-                    }}
-                  >
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-pink-100/30 to-transparent"
-                      animate={{
-                        opacity: [0.3, 0.5, 0.3],
-                        backgroundPosition: ["200% 0", "-200% 0"]
-                      }}
-                      transition={{
-                        duration: 8,
-                        repeat: Infinity,
-                        ease: "linear"
-                      }}
-                      style={{ backgroundSize: "200% 100%" }}
-                    />
-                    <motion.span 
-                      className="text-2xl relative z-10"
-                      animate={{
-                        scale: [1, 1.2, 1],
-                        rotate: [0, 360],
-                        filter: ["drop-shadow(0 0 0px rgba(236,72,153,0))", "drop-shadow(0 0 3px rgba(236,72,153,0.5))", "drop-shadow(0 0 0px rgba(236,72,153,0))"],
-                      }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                    >✨</motion.span>
-                    <div className="relative z-10">
-                      <div className="font-semibold text-gray-800 text-sm sm:text-base">
-                        <motion.span 
-                          className="text-primary-600"
-                          animate={{
-                            textShadow: ["0 0 0px rgba(79,70,229,0)", "0 0 10px rgba(79,70,229,0.3)", "0 0 0px rgba(79,70,229,0)"]
-                          }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >3/5 complétées</motion.span> 
-                      </div>
-                      <div className="text-sm text-gray-600 flex items-center">
-                        Plus que 2 pour le Badge Amour
-                        <motion.span 
-                          className="inline-flex ml-2"
-                          animate={{ 
-                            scale: [1, 1.3, 1],
-                            rotate: [0, 15, -15, 0],
-                            filter: ["drop-shadow(0 0 0px rgba(236,72,153,0))", "drop-shadow(0 0 5px rgba(236,72,153,0.7))", "drop-shadow(0 0 0px rgba(236,72,153,0))"],
-                          }}
-                          transition={{ 
-                            duration: 3,
-                            repeat: Infinity,
-                            ease: "easeInOut"
-                          }}
-                        >
-                          ❤️
-                        </motion.span>
-                      </div>
+                  <div className="flex flex-col items-center">
+                    <div className="text-2xl font-bold text-gray-800 mb-4 bg-gradient-to-r from-primary-600 to-purple-600 text-transparent bg-clip-text">
+                      60% de votre objectif quotidien atteint
                     </div>
-                    
-                  </motion.div>
-                </div>
-                
-              </motion.div>
-            </div>
-            
-           
+                    <div className="text-lg text-primary-600 font-medium mb-6 flex items-center justify-center">
+                      <motion.div
+                        animate={{ scale: [1, 1.1, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className="flex items-center bg-primary-50 px-4 py-2 rounded-full border border-primary-200"
+                      >
+                        <span className="text-2xl mr-2">🎯</span>
+                        <span>3/5 interactions</span>
+                      </motion.div>
+                    </div>
+                    <div className="w-full h-4 bg-gray-100 rounded-full mb-6 overflow-hidden shadow-inner">
+                      <motion.div
+                        className="h-full bg-gradient-to-r from-primary-500 via-purple-500 to-pink-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: "60%" }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
+                      />
+                    </div>
+                    <motion.div
+                      className="flex items-center p-4 bg-gradient-to-r from-pink-50 to-purple-50 rounded-xl border border-pink-200 shadow-sm"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <motion.span 
+                        className="text-3xl mr-4"
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 10, -10, 0]
+                        }}
+                        transition={{ 
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                      >
+                        ❤️
+                      </motion.span>
+                      <div>
+                        <div className="text-lg font-bold text-pink-700 mb-1">Vous êtes proche du badge Amour !</div>
+                        <div className="text-sm text-pink-600">Continuez vos interactions bienveillantes</div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
           
         </div>  
@@ -330,7 +155,7 @@ const LandingPage: React.FC = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
               >
-                Exprimez vos émotions et débloquez des récompenses !
+                Exprimez vos émotions !
               </motion.h2>
               <motion.p
                 className="text-gray-600 mt-2 max-w-2xl mx-auto"
@@ -363,6 +188,7 @@ const LandingPage: React.FC = () => {
                   repeat: Infinity,
                   repeatType: 'reverse'
                 }}
+                style={{ pointerEvents: 'none' }}
               >
                 🌊
               </motion.div>
@@ -395,6 +221,7 @@ const LandingPage: React.FC = () => {
                   repeat: Infinity,
                   repeatType: 'reverse'
                 }}
+                style={{ pointerEvents: 'none' }}
               >
                 💫
               </motion.div>
@@ -427,6 +254,7 @@ const LandingPage: React.FC = () => {
                   repeat: Infinity,
                   repeatType: 'reverse'
                 }}
+                style={{ pointerEvents: 'none' }}
               >
                 💪
               </motion.div>
@@ -441,23 +269,93 @@ const LandingPage: React.FC = () => {
         </div>
 
         <div className="mb-16">
+          <FeaturedBadges />
+        </div>
+
+        <div className="mb-16">
           <MoodJournal />
         </div>
 
-        <motion.div 
-          className="text-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2 }}
-        >
-          <a 
-            href="/dashboard" 
-            className="mood-button inline-block px-8 py-3 text-lg"
-          >
-            Voir mon journal d'humeur
-          </a>
-        </motion.div>
       </div>
+
+      {/* Mobile Bottom Navigation */}
+      <motion.div 
+        className="fixed bottom-0 left-0 right-0 md:hidden bg-white/80 backdrop-blur-lg border-t border-gray-200 shadow-lg z-50"
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', damping: 20 }}
+      >
+        <div className="flex justify-around items-center p-4">
+          <motion.button
+            onClick={() => openModal('vibes')}
+            className="flex flex-col items-center space-y-1"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.span 
+              className="text-2xl"
+              animate={{ 
+                scale: [1, 1.1, 1],
+                rotate: [0, 5, -5, 0]
+              }}
+              transition={{ 
+                duration: 3,
+                repeat: Infinity,
+                repeatType: 'reverse'
+              }}
+            >
+              🌊
+            </motion.span>
+            <span className="text-sm font-medium text-gray-600">Vibes</span>
+          </motion.button>
+
+          <motion.button
+            onClick={() => openModal('pulse')}
+            className="flex flex-col items-center space-y-1"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.span 
+              className="text-2xl"
+              animate={{ 
+                opacity: [1, 0.5, 1],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse'
+              }}
+            >
+              💫
+            </motion.span>
+            <span className="text-sm font-medium text-gray-600">Pulse</span>
+          </motion.button>
+
+          <motion.button
+            onClick={() => openModal('challenge')}
+            className="flex flex-col items-center space-y-1"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <motion.span 
+              className="text-2xl"
+              animate={{ 
+                y: [0, -10, 0],
+                rotate: [0, 5, 0]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: 'reverse'
+              }}
+            >
+              💪
+            </motion.span>
+            <span className="text-sm font-medium text-gray-600">Challenge</span>
+          </motion.button>
+        </div>
+      </motion.div>
 
       <FeatureModal 
         isOpen={activeModal === 'vibes'} 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import ParticipationRate from './ParticipationRate';
 
 const calendarViews = ['day', 'week', 'month', 'year'];
 
@@ -27,7 +26,6 @@ const MoodJournal: React.FC = () => {
   const [calendarView, setCalendarView] = useState<CalendarViewType>('day');
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [loading, setLoading] = useState<boolean>(true);
-  const [todayEntries, setTodayEntries] = useState<MoodEntry[]>([]);
   
   useEffect(() => {
     // Dans une application réelle, ces données viendraient d'une API
@@ -86,18 +84,8 @@ const MoodJournal: React.FC = () => {
         details: {}
       },
     ];
-
-    // Filter today's entries for the participation rate component
-    const today = new Date();
-    const filtered = mockMoodEntries.filter(entry => {
-      const entryDate = new Date(entry.timestamp);
-      return entryDate.getDate() === today.getDate() &&
-             entryDate.getMonth() === today.getMonth() &&
-             entryDate.getFullYear() === today.getFullYear();
-    });
     
     setMoodEntries(mockMoodEntries);
-    setTodayEntries(filtered);
     setLoading(false);
   }, []);
   
@@ -200,100 +188,97 @@ const MoodJournal: React.FC = () => {
   };
 
   return (
-    <>
-      {/* Separate participation rate component */}
-      <ParticipationRate 
-        dailyGoal={5}
-        currentCount={todayEntries.length}
-      />
+    <div className="mood-section bg-white rounded-xl shadow-lg p-4 sm:p-6 transform transition-all hover:scale-105 overflow-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-center mb-4 text-center sm:text-left">
+        <span className="text-3xl sm:text-4xl mx-auto sm:mx-0 sm:mr-3 mb-2 sm:mb-0">📔</span>
+        <h2 className="text-xl sm:text-2xl font-bold">Journal de mes moods</h2>
+      </div>
       
-      <div className="mood-section bg-white rounded-xl shadow-lg p-4 sm:p-6 transform transition-all hover:scale-105 overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center mb-4 text-center sm:text-left">
-          <span className="text-3xl sm:text-4xl mx-auto sm:mx-0 sm:mr-3 mb-2 sm:mb-0">📔</span>
-          <h2 className="text-xl sm:text-2xl font-bold">Journal de mes moods</h2>
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
         </div>
-        
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      ) : (
+        <>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:space-x-2 mb-6">
+            {calendarViews.map(view => (
+              <motion.button
+                key={view}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setCalendarView(view as any)}
+                className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${calendarView === view ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              >
+                {view === 'day' ? 'Jour' :
+                 view === 'week' ? 'Semaine' :
+                 view === 'month' ? 'Mois' : 'Année'}
+              </motion.button>
+            ))}
           </div>
-        ) : (
-          <>
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:space-x-2 mb-6">
-              {calendarViews.map(view => (
-                <motion.button
-                  key={view}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setCalendarView(view as any)}
-                  className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium transition-colors ${calendarView === view ? 'bg-primary-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                >
-                  {view === 'day' ? 'Jour' :
-                   view === 'week' ? 'Semaine' :
-                   view === 'month' ? 'Mois' : 'Année'}
-                </motion.button>
-              ))}
-            </div>
 
-            {/* Liste des entrées */}
-            <div className="space-y-4">
-              <AnimatePresence mode="wait">
-                {getFilteredEntries().map((entry, index) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`p-4 rounded-lg border ${getMoodTypeColor(entry.type)}`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex flex-col items-center">
-                          <span className="text-2xl">
-                            {entry.details.emoji || 
-                             (entry.type === 'pulse' ? '💫' : 
-                              entry.type === 'challenge' ? '🎯' : '🌈')}
-                          </span>
-                          <span className="text-xs font-medium mt-1">{formatTime(entry.timestamp)}</span>
+          {/* Liste des entrées */}
+          <div className="space-y-4">
+            <AnimatePresence>
+              {getFilteredEntries().map((entry, index) => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ 
+                    duration: 0.3,
+                    delay: index * 0.05,
+                    ease: "easeInOut"
+                  }}
+                  className={`p-4 rounded-lg border ${getMoodTypeColor(entry.type)}`}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex flex-col items-center">
+                        <span className="text-2xl">
+                          {entry.details.emoji || 
+                           (entry.type === 'pulse' ? '💫' : 
+                            entry.type === 'challenge' ? '🎯' : '🌈')}
+                        </span>
+                        <span className="text-xs font-medium mt-1">{formatTime(entry.timestamp)}</span>
+                      </div>
+                      <div>
+                        <div className="font-medium">
+                          {entry.type === 'vibe' && entry.details.emotion}
+                          {entry.type === 'pulse' && 'Présence silencieuse'}
+                          {entry.type === 'challenge' && entry.details.challengeTitle}
                         </div>
-                        <div>
-                          <div className="font-medium">
-                            {entry.type === 'vibe' && entry.details.emotion}
-                            {entry.type === 'pulse' && 'Présence silencieuse'}
-                            {entry.type === 'challenge' && entry.details.challengeTitle}
-                          </div>
-                          <div className="flex items-center mt-1 text-sm">
-                            <span className="mr-2">{getRelationshipEmoji(entry.recipientType)}</span>
-                            <span>{entry.recipientName}</span>
-                          </div>
+                        <div className="flex items-center mt-1 text-sm">
+                          <span className="mr-2">{getRelationshipEmoji(entry.recipientType)}</span>
+                          <span>{entry.recipientName}</span>
                         </div>
                       </div>
-                      <motion.div
-                        whileHover={{ scale: 1.1, rotate: 10 }}
-                        className="text-2xl cursor-pointer"
-                        title={entry.recipientType}
-                      >
-                        {getRelationshipEmoji(entry.recipientType)}
-                      </motion.div>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-
-              {getFilteredEntries().length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-8 text-gray-500"
-                >
-                  <p>Aucune activité pour cette période</p>
+                    <motion.div
+                      whileHover={{ scale: 1.1, rotate: 10 }}
+                      className="text-2xl cursor-pointer"
+                      title={entry.recipientType}
+                    >
+                      {getRelationshipEmoji(entry.recipientType)}
+                    </motion.div>
+                  </div>
                 </motion.div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </>
+              ))}
+            </AnimatePresence>
+
+            {getFilteredEntries().length === 0 && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.3 }}
+                className="text-center py-8 text-gray-500"
+              >
+                <p>Aucune activité pour cette période</p>
+              </motion.div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
   );
 };
 

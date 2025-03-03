@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 type SupportEvent = {
   id: string;
@@ -12,6 +12,15 @@ type SupportEvent = {
   emoji: string;
 };
 
+type Achievement = {
+  id: string;
+  title: string;
+  emoji: string;
+  progress: number;
+  total: number;
+  color: string;
+};
+
 type ImpactHistoryProps = {
   userId: string;
   friendId: string;
@@ -20,6 +29,9 @@ type ImpactHistoryProps = {
 };
 
 const ImpactHistory: React.FC<ImpactHistoryProps> = ({ userId, friendId, userName, friendName }) => {
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+
   // In a real app, this would be fetched from an API
   const [supportEvents, setSupportEvents] = React.useState<SupportEvent[]>([
     {
@@ -54,20 +66,52 @@ const ImpactHistory: React.FC<ImpactHistoryProps> = ({ userId, friendId, userNam
     },
   ]);
 
-  // Calculate statistics
+  // Achievement data
+  const achievements: Achievement[] = [
+    {
+      id: 'daily-goal',
+      title: 'Objectif quotidien',
+      emoji: '🎯',
+      progress: 5,
+      total: 5,
+      color: 'from-blue-500 to-purple-600'
+    },
+    {
+      id: 'love-badge',
+      title: 'Badge Amour',
+      emoji: '❤️',
+      progress: 3,
+      total: 5,
+      color: 'from-pink-500 to-red-600'
+    },
+    {
+      id: 'support-streak',
+      title: 'Série de soutien',
+      emoji: '✨',
+      progress: 7,
+      total: 10,
+      color: 'from-yellow-500 to-orange-600'
+    }
+  ];
+
+  // Calculate impact statistics
   const stats = React.useMemo(() => {
-    const userHelpedFriend = supportEvents.filter(e => e.fromUserId === userId && e.toUserId === friendId).length;
-    const friendHelpedUser = supportEvents.filter(e => e.fromUserId === friendId && e.toUserId === userId).length;
+    const todayInteractions = supportEvents.filter(e => {
+      const today = new Date();
+      const eventDate = new Date(e.timestamp);
+      return eventDate.getDate() === today.getDate() &&
+             eventDate.getMonth() === today.getMonth() &&
+             eventDate.getFullYear() === today.getFullYear();
+    }).length;
+
     const highImpactEvents = supportEvents.filter(e => e.impact >= 8).length;
-    const completedChallenges = supportEvents.filter(e => e.type === 'challenge').length;
     
     return {
-      userHelpedFriend,
-      friendHelpedUser,
+      todayInteractions,
       highImpactEvents,
-      completedChallenges
+      totalInteractions: supportEvents.length
     };
-  }, [supportEvents, userId, friendId]);
+  }, [supportEvents]);
 
   const getEventColor = (type: string) => {
     switch (type) {
@@ -88,59 +132,177 @@ const ImpactHistory: React.FC<ImpactHistoryProps> = ({ userId, friendId, userNam
   };
 
   return (
-    <div className="mood-container">
-      <h2 className="text-2xl font-bold mb-6">Historique d'Impact</h2>
-      
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div className="p-4 rounded-lg bg-white shadow text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.userHelpedFriend}</div>
-          <div className="text-sm text-gray-600">Fois où {userName} a aidé {friendName}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-white shadow text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.friendHelpedUser}</div>
-          <div className="text-sm text-gray-600">Fois où {friendName} a aidé {userName}</div>
-        </div>
-        <div className="p-4 rounded-lg bg-white shadow text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.highImpactEvents}</div>
-          <div className="text-sm text-gray-600">Moments à fort impact</div>
-        </div>
-        <div className="p-4 rounded-lg bg-white shadow text-center">
-          <div className="text-3xl font-bold text-primary-600">{stats.completedChallenges}</div>
-          <div className="text-sm text-gray-600">Défis complétés</div>
-        </div>
-      </div>
-      
-      <div className="relative">
-        {/* Timeline line */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
-        
-        {/* Timeline events */}
-        <div className="space-y-6">
-          {supportEvents.map((event, index) => (
+    <div className="space-y-8">
+      <div className="bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+        <h2 className="text-2xl font-bold mb-6 flex items-center">
+          <span className="text-3xl mr-3">📊</span>
+          Votre Impact Aujourd'hui
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {achievements.map((achievement) => (
             <motion.div
-              key={event.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className={`ml-10 p-4 rounded-lg border ${getEventColor(event.type)} relative`}
+              key={achievement.id}
+              className="relative overflow-hidden bg-gradient-to-br p-6 rounded-lg shadow-md cursor-pointer"
+              style={{
+                background: `linear-gradient(135deg, ${achievement.color.split(' ')[1]} 0%, ${achievement.color.split(' ')[3]} 100%)`
+              }}
+              whileHover={{ scale: 1.05 }}
+              onClick={() => setSelectedAchievement(achievement)}
             >
-              {/* Timeline dot */}
-              <div className="absolute left-[-2rem] top-4 w-4 h-4 rounded-full bg-primary-500 border-4 border-white"></div>
-              
-              <div className="flex items-start">
-                <span className="text-2xl mr-3">{event.emoji}</span>
-                <div>
-                  <p className="text-gray-700">{event.description}</p>
-                  <p className="text-sm text-gray-500 mt-1">{formatDate(event.timestamp)}</p>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-4xl">{achievement.emoji}</span>
+                  <span className="text-white font-bold text-xl">
+                    {achievement.progress}/{achievement.total}
+                  </span>
                 </div>
-                <div className="ml-auto bg-white rounded-full px-2 py-1 text-sm font-medium border">
-                  Impact: {event.impact}/10
+                
+                <h3 className="text-white font-semibold mb-2">{achievement.title}</h3>
+                
+                <div className="relative h-2 bg-white/30 rounded-full overflow-hidden">
+                  <motion.div
+                    className="absolute top-0 left-0 h-full bg-white"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(achievement.progress / achievement.total) * 100}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                  />
                 </div>
+
+                {achievement.progress === achievement.total && (
+                  <motion.div
+                    className="absolute top-2 right-2"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 15 }}
+                  >
+                    <span className="text-2xl">✨</span>
+                  </motion.div>
+                )}
               </div>
+
+              <motion.div
+                className="absolute inset-0 bg-white opacity-10"
+                initial={{ scale: 0, x: '100%' }}
+                animate={{
+                  scale: [1, 1.5, 1],
+                  x: ['-100%', '100%'],
+                }}
+                transition={{
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
             </motion.div>
           ))}
         </div>
+
+        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-violet-500 to-purple-600 p-4 rounded-lg text-white text-center">
+            <motion.div
+              className="text-3xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15 }}
+            >
+              {stats.todayInteractions}
+            </motion.div>
+            <div className="text-sm opacity-90">Interactions aujourd'hui</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-pink-500 to-rose-600 p-4 rounded-lg text-white text-center">
+            <motion.div
+              className="text-3xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15, delay: 0.1 }}
+            >
+              {stats.highImpactEvents}
+            </motion.div>
+            <div className="text-sm opacity-90">Moments à fort impact</div>
+          </div>
+
+          <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 rounded-lg text-white text-center">
+            <motion.div
+              className="text-3xl font-bold mb-1"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 15, delay: 0.2 }}
+            >
+              {stats.totalInteractions}
+            </motion.div>
+            <div className="text-sm opacity-90">Total des interactions</div>
+          </div>
+        </div>
       </div>
+      
+      <AnimatePresence>
+        {selectedAchievement && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedAchievement(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-xl p-6 max-w-md w-full relative"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <span className="text-6xl mb-4 inline-block">{selectedAchievement.emoji}</span>
+                <h3 className="text-2xl font-bold mb-2">{selectedAchievement.title}</h3>
+                <p className="text-gray-600 mb-4">
+                  {selectedAchievement.progress === selectedAchievement.total
+                    ? 'Objectif atteint ! Félicitations !'
+                    : `Plus que ${selectedAchievement.total - selectedAchievement.progress} pour compléter cet objectif`}
+                </p>
+                <div className="relative h-3 bg-gray-200 rounded-full overflow-hidden mb-6">
+                  <motion.div
+                    className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-purple-600"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(selectedAchievement.progress / selectedAchievement.total) * 100}%` }}
+                    transition={{ duration: 1, ease: "easeOut" }}
+                  />
+                </div>
+                <button
+                  onClick={() => setSelectedAchievement(null)}
+                  className="bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium px-6 py-2 rounded-lg transition-colors"
+                >
+                  Fermer
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Celebration effect */}
+      <AnimatePresence>
+        {showCelebration && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.5 }}
+              className="p-8 rounded-xl bg-white shadow-2xl text-center"
+            >
+              <div className="text-6xl mb-4">🎉</div>
+              <h3 className="text-2xl font-bold mb-2">Félicitations !</h3>
+              <p className="text-gray-600">Vous avez atteint un nouvel objectif !</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

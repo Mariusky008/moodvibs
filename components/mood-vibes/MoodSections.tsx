@@ -3,11 +3,13 @@ import MoodVibe from './MoodVibe';
 import MoodPulse from './MoodPulse';
 import MoodChallenge from './MoodChallenge';
 import MoodJournal from './MoodJournal';
+import DailyImpact from './DailyImpact';
 
 const MoodSections: React.FC = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="grid grid-cols-1 gap-8">
+        <DailyImpact />
         <MoodJournal />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
