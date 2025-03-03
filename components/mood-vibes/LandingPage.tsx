@@ -83,9 +83,9 @@ const LandingPage: React.FC = () => {
             }}
             whileHover={{ scale: 1.02 }}
           >
-            Partagez vos émotions pour créer
-            <br />
-            <span className="text-4xl md:text-5xl bg-gradient-to-r from-pink-500 via-red-500 to-yellow-500 bg-clip-text">des liens plus forts</span>
+           
+           
+            
           </motion.h1>
           <motion.div 
             className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto font-medium mb-12 relative group"
@@ -96,17 +96,42 @@ const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-8 sm:space-y-0 sm:space-x-10">
               <motion.div 
                 className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0"
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                transition={{ type: "spring", stiffness: 300, damping: 15 }}
               >
-                <svg className="transform -rotate-90 w-full h-full" viewBox="0 0 100 100">
-                  <circle
+                {/* Glow effect behind the circle */}
+                <motion.div 
+                  className="absolute inset-0 rounded-full blur-md z-0"
+                  animate={{ 
+                    opacity: [0.4, 0.7, 0.4],
+                    scale: [0.85, 0.9, 0.85],
+                  }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
+                  style={{ background: "radial-gradient(circle, rgba(79,70,229,0.6) 0%, rgba(79,70,229,0) 70%)" }}
+                />
+                <svg className="transform -rotate-90 w-full h-full relative z-10" viewBox="0 0 100 100">
+                  {/* Background circle with subtle pulse */}
+                  <motion.circle
                     cx="50"
                     cy="50"
                     r="45"
                     className="stroke-current text-gray-200"
                     strokeWidth="8"
                     fill="transparent"
+                    animate={{ 
+                      opacity: [0.7, 1, 0.7],
+                    }}
+                    transition={{ 
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
                   />
+                  {/* Progress circle with gradient and glow */}
                   <motion.circle
                     cx="50"
                     cy="50"
@@ -120,20 +145,49 @@ const LandingPage: React.FC = () => {
                       rotate: 360
                     }}
                     transition={{ 
-                      pathLength: { duration: 2, ease: "easeInOut" },
-                      rotate: { duration: 3, ease: "easeInOut" }
+                      pathLength: { duration: 2.5, ease: "easeOut" },
+                      rotate: { duration: 8, ease: "easeInOut", repeat: Infinity }
                     }}
                     strokeLinecap="round"
+                    style={{ filter: "drop-shadow(0 0 3px rgba(79,70,229,0.7))" }}
                   />
                 </svg>
                 <motion.div 
                   className="absolute inset-0 flex items-center justify-center text-2xl sm:text-3xl font-bold"
                   initial={{ scale: 0.8 }}
-                  animate={{ scale: [0.8, 1.1, 1] }}
-                  transition={{ duration: 0.5, delay: 2 }}
+                  animate={{ 
+                    scale: [0.9, 1.05, 0.9],
+                    textShadow: ["0 0 5px rgba(79,70,229,0)", "0 0 10px rgba(79,70,229,0.5)", "0 0 5px rgba(79,70,229,0)"],
+                  }}
+                  transition={{ 
+                    duration: 3, 
+                    repeat: Infinity,
+                    ease: "easeInOut" 
+                  }}
                 >
-                  <span className="bg-gradient-to-br from-primary-500 to-primary-600 text-transparent bg-clip-text">60%</span>
+                  <span className="bg-gradient-to-br from-primary-500 via-purple-500 to-primary-600 text-transparent bg-clip-text">60%</span>
                 </motion.div>
+                {/* Particle dots around the circle */}
+                {[...Array(8)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="absolute w-1.5 h-1.5 rounded-full bg-primary-400"
+                    style={{ 
+                      left: `${50 + 45 * Math.cos(i * Math.PI / 4)}%`, 
+                      top: `${50 + 45 * Math.sin(i * Math.PI / 4)}%`,
+                    }}
+                    animate={{ 
+                      scale: [0, 1, 0],
+                      opacity: [0, 0.8, 0]
+                    }}
+                    transition={{ 
+                      duration: 2,
+                      delay: i * 0.25,
+                      repeat: Infinity,
+                      repeatDelay: 1
+                    }}
+                  />
+                ))}
               </motion.div>
               
               <motion.div 
@@ -149,60 +203,144 @@ const LandingPage: React.FC = () => {
                 >
                   Votre Impact Aujourd'hui
                 </motion.h4>
-                <div className="space-y-3">
-                  <motion.div 
-                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-sm"
-                    whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.8)" }}
+                <div className="space-y-3">                  <motion.div 
+                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 relative overflow-hidden"
+                    whileHover={{ 
+                      scale: 1.02, 
+                      boxShadow: "0 8px 20px rgba(79,70,229,0.15)",
+                      backgroundColor: "rgba(255,255,255,0.9)"
+                    }}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ 
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20
+                    }}
                   >
-                    <span className="text-2xl">🎯</span>
-                    <div>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-primary-100/30 to-transparent"
+                      animate={{
+                        opacity: [0.3, 0.5, 0.3],
+                        backgroundPosition: ["200% 0", "-200% 0"]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                      style={{ backgroundSize: "200% 100%" }}
+                    />
+                    <motion.span 
+                      className="text-2xl relative z-10"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        filter: ["drop-shadow(0 0 0px rgba(79,70,229,0))", "drop-shadow(0 0 3px rgba(79,70,229,0.5))", "drop-shadow(0 0 0px rgba(79,70,229,0))"],
+                      }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >🎯 </motion.span>
+                    <div className="relative z-10">
                       <div className="font-semibold text-gray-800 text-sm sm:text-base">5 interactions</div>
                       <div className="text-sm text-gray-600">Objectif quotidien</div>
                     </div>
                   </motion.div>
                   
                   <motion.div 
-                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 shadow-sm"
-                    whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.8)" }}
+                    className="flex items-center space-x-3 bg-white/50 backdrop-blur-sm rounded-lg p-2 sm:p-3 relative overflow-hidden"
+                    whileHover={{ 
+                      scale: 1.02, 
+                      boxShadow: "0 8px 20px rgba(236,72,153,0.15)",
+                      backgroundColor: "rgba(255,255,255,0.9)"
+                    }}
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ 
+                      type: "spring",
+                      stiffness: 300,
+                      damping: 20,
+                      delay: 0.1
+                    }}
                   >
-                    <span className="text-2xl">✨</span>
-                    <div>
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-pink-100/30 to-transparent"
+                      animate={{
+                        opacity: [0.3, 0.5, 0.3],
+                        backgroundPosition: ["200% 0", "-200% 0"]
+                      }}
+                      transition={{
+                        duration: 8,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                      style={{ backgroundSize: "200% 100%" }}
+                    />
+                    <motion.span 
+                      className="text-2xl relative z-10"
+                      animate={{
+                        scale: [1, 1.2, 1],
+                        rotate: [0, 360],
+                        filter: ["drop-shadow(0 0 0px rgba(236,72,153,0))", "drop-shadow(0 0 3px rgba(236,72,153,0.5))", "drop-shadow(0 0 0px rgba(236,72,153,0))"],
+                      }}
+                      transition={{ duration: 3, repeat: Infinity }}
+                    >✨</motion.span>
+                    <div className="relative z-10">
                       <div className="font-semibold text-gray-800 text-sm sm:text-base">
-                        <span className="text-primary-600">3/5</span> complétées
+                        <motion.span 
+                          className="text-primary-600"
+                          animate={{
+                            textShadow: ["0 0 0px rgba(79,70,229,0)", "0 0 10px rgba(79,70,229,0.3)", "0 0 0px rgba(79,70,229,0)"]
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >3/5 complétées</motion.span> 
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-sm text-gray-600 flex items-center">
                         Plus que 2 pour le Badge Amour
                         <motion.span 
-                          className="inline-block ml-2"
+                          className="inline-flex ml-2"
                           animate={{ 
-                            scale: [1, 1.2, 1],
-                            rotate: [0, 10, -10, 0]
+                            scale: [1, 1.3, 1],
+                            rotate: [0, 15, -15, 0],
+                            filter: ["drop-shadow(0 0 0px rgba(236,72,153,0))", "drop-shadow(0 0 5px rgba(236,72,153,0.7))", "drop-shadow(0 0 0px rgba(236,72,153,0))"],
                           }}
                           transition={{ 
-                            duration: 2,
+                            duration: 3,
                             repeat: Infinity,
-                            repeatType: "reverse"
+                            ease: "easeInOut"
                           }}
                         >
                           ❤️
                         </motion.span>
                       </div>
                     </div>
+                    
                   </motion.div>
                 </div>
+                
               </motion.div>
             </div>
             
-            <motion.div 
-              className="absolute -bottom-12 left-1/2 transform -translate-x-1/2 bg-primary-50 rounded-lg px-4 py-2 opacity-0 transition-opacity duration-200 pointer-events-none group-hover:opacity-100 shadow-lg"
-              initial={{ y: 10 }}
-              whileHover={{ y: 0 }}
-            >
-              <p className="text-sm text-primary-600">Complétez vos activités pour débloquer des récompenses !</p>
-            </motion.div>
+           
           </motion.div>
           
-        </div>
+        </div>  
+         <div className="text-center mb-8">
+              <motion.h2 
+                className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary-500 to-purple-500 text-transparent bg-clip-text"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                Exprimez vos émotions et débloquez des récompenses !
+              </motion.h2>
+              <motion.p
+                className="text-gray-600 mt-2 max-w-2xl mx-auto"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+              >
+                Choisissez une Mood qui vous correspond et partagez-la avec vos proches
+              </motion.p>
+            </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           <motion.div 
