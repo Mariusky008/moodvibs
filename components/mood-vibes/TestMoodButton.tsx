@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MoodVibeResponse from './MoodVibeResponse';
 
 type Emotion = {
   name: string;
@@ -21,10 +22,12 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
   const [showTestNotification, setShowTestNotification] = useState(false);
   const [testMood, setTestMood] = useState<{emotion: Emotion, senderName: string} | null>(null);
   const [showResponsePopup, setShowResponsePopup] = useState(false);
+  const [showMoodVibeResponse, setShowMoodVibeResponse] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('');
   const [currentAction, setCurrentAction] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [moodId, setMoodId] = useState('');
   const componentMounted = useRef(true);
 
   const handleTestMoodReceive = () => {
@@ -45,15 +48,6 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
         senderName: randomSender
       });
       setShowTestNotification(true);
-
-      setTimeout(() => {
-        if (!componentMounted.current) return;
-        setShowTestNotification(false);
-        setTimeout(() => {
-          if (!componentMounted.current) return;
-          setTestMood(null);
-        }, 300);
-      }, 8000);
     }, 100);
 
     return false;
@@ -77,10 +71,11 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="fixed bottom-24 right-4 max-w-sm w-[calc(100%-2rem)] mx-4 bg-white rounded-xl shadow-xl p-4 sm:p-6 border-l-4 backdrop-blur-sm"
+            className="fixed bottom-24 right-4 max-w-sm w-[calc(100%-2rem)] mx-4 bg-white/95 rounded-xl shadow-2xl p-4 sm:p-6 border-l-4 backdrop-blur-md ring-1 ring-black/5 z-[100]"
             style={{ 
               borderLeftColor: testMood.emotion.color,
-              backgroundColor: `${testMood.emotion.color}15`
+              backgroundColor: `${testMood.emotion.color}25`,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 8px 24px -8px rgba(0, 0, 0, 0.15)'
             }}
           >
           <div className="flex flex-col">
@@ -98,66 +93,19 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
               </div>
             </div>
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
-              {testMood.emotion.name === 'Envie d\'un câlin' && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setCurrentAction('câlin');
-                    setSelectedEmoji('🤗');
-                    setShowResponsePopup(true);
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-pink-100 hover:bg-pink-200 text-pink-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
-                >
-                  Envoyer un câlin virtuel 🤗
-                </motion.button>
-              )}
-              {testMood.emotion.name === 'Je bouillonne' && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setCurrentAction('apaisant');
-                    setSelectedEmoji('🌊');
-                    setShowResponsePopup(true);
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
-                >
-                  Envoyer un message apaisant 🌊
-                </motion.button>
-              )}
-              {testMood.emotion.name === 'Besoin de souffler' && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setCurrentAction('soutien');
-                    setSelectedEmoji('💚');
-                    setShowResponsePopup(true);
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-green-100 hover:bg-green-200 text-green-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
-                >
-                  Envoyer un message de soutien 💚
-                </motion.button>
-              )}
-              {(testMood.emotion.name === 'Apaisé' || 
-                testMood.emotion.name === 'Joyeux' || 
-                testMood.emotion.name === 'Mélancolique' || 
-                testMood.emotion.name === 'Énergique' || 
-                testMood.emotion.name === 'Serein') && (
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => {
-                    setCurrentAction('partage');
-                    setSelectedEmoji('💫');
-                    setShowResponsePopup(true);
-                  }}
-                  className="flex-1 px-4 py-2.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
-                >
-                  Partager ce moment 💫
-                </motion.button>
-              )}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  // Generate a unique ID for this mood
+                  const uniqueId = `mood-${Date.now()}`;
+                  setMoodId(uniqueId);
+                  setShowMoodVibeResponse(true);
+                }}
+                className="flex-1 px-4 py-2.5 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
+              >
+                Répondre avec MoodVibe 💬
+              </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -174,7 +122,7 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
 
       <button
         onClick={handleTestMoodReceive}
-        className={`fixed ${positionClass} bg-primary-500 hover:bg-primary-600 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 z-50`}
+        className={`fixed ${positionClass} bg-primary-500 hover:bg-primary-600 text-white rounded-full p-4 shadow-lg transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 z-30`}
         title="Tester la réception d'une humeur"
       >
         <span className="text-2xl">🎲</span>
@@ -262,12 +210,8 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                       onClick={() => {
                         setShowSuccessMessage(true);
                         setTimeout(() => {
-                          setShowResponsePopup(false);
-                          setResponseMessage('');
                           setShowSuccessMessage(false);
-                          setTimeout(() => {
-                            setShowTestNotification(false);
-                          }, 300);
+                          setShowResponsePopup(false);
                         }, 2000);
                       }}
                       disabled={!responseMessage.trim()}
@@ -280,6 +224,25 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
               )}
             </motion.div>
           </div>
+        )}
+      </AnimatePresence>
+      
+      {/* MoodVibeResponse Component Integration */}
+      <AnimatePresence>
+        {showMoodVibeResponse && testMood && (
+          <MoodVibeResponse
+            moodId={moodId}
+            senderName={testMood.senderName}
+            emotion={{
+              name: testMood.emotion.name,
+              emoji: testMood.emotion.emoji
+            }}
+            onRespond={(response) => {
+              console.log('Response sent:', response);
+              // Removed the automatic closing timer to allow users more time to interact
+            }}
+            onClose={() => setShowMoodVibeResponse(false)}
+          />
         )}
       </AnimatePresence>
     </>

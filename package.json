@@ -15,7 +15,7 @@
     "@next/swc-darwin-x64": "^15.2.0",
     "@swc/helpers": "^0.5.1",
     "firebase": "^11.4.0",
-    "framer-motion": "^12.4.7",
+    "framer-motion": "^12.4.10",
     "next": "^13.4.19",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import MoodVibeResponse from './MoodVibeResponse';
 
 type Emotion = {
   name: string;
@@ -15,6 +16,22 @@ type MoodVibeProps = {
   userName?: string;
   avatarUrl?: string;
   onSendVibe?: (emotion: Emotion, recipientId: string) => void;
+  receivedMoods?: Array<{
+    id: string;
+    emotion: Emotion;
+    senderId: string;
+    senderName: string;
+    status: 'pending' | 'responded';
+    timestamp: number;
+  }>;
+  sentMoods?: Array<{
+    id: string;
+    emotion: Emotion;
+    recipientId: string;
+    recipientName: string;
+    status: 'pending' | 'acknowledged';
+    timestamp: number;
+  }>;
 };
 
 const emotions: Emotion[] = [
@@ -35,13 +52,19 @@ const emotions: Emotion[] = [
   }
 ];
 
-const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, onSendVibe }) => {
+const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, onSendVibe, receivedMoods = [], sentMoods = [] }) => {
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showRecipientModal, setShowRecipientModal] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState('');
   const [intensity, setIntensity] = useState<number>(5);
+  const [showResponseModal, setShowResponseModal] = useState(false);
+  const [selectedMoodToRespond, setSelectedMoodToRespond] = useState<{
+    id: string;
+    emotion: Emotion;
+    senderName: string;
+  } | null>(null);
 
   // Mock recipients data (replace with actual data in production)
   const mockRecipients = [
@@ -94,6 +117,7 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
   };
 
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   const handleSendVibe = () => {
     if (selectedEmotion && selectedRecipient && onSendVibe) {
@@ -111,17 +135,43 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
       onSendVibe(emotionWithIntensity, selectedRecipient);
       setShowSuccessMessage(true);
 
-      // Hide success message and reset all states together after 2 seconds
+      // Only hide modals but keep the emotion and recipient information
       setTimeout(() => {
         setShowSuccessMessage(false);
         setShowPreviewModal(false);
         setShowRecipientModal(false);
         setIsAnimating(false);
-        setSelectedEmotion(null);
-        setSelectedRecipient('');
-        setIntensity(5);
-      }, 2000);
+      }, 10000);
     }
+  };
+
+  const handleRespondToMood = (mood: {
+    id: string;
+    emotion: Emotion;
+    senderName: string;
+  }) => {
+    setSelectedMoodToRespond(mood);
+    setShowResponseModal(true);
+  };
+
+  const handleSendResponse = (response: {
+    moodId: string;
+    actionId: string;
+    category: 'direct' | 'physical';
+    customMessage?: string;
+  }) => {
+    // Here you would typically send the response to your backend
+    console.log('Response sent:', response);
+    
+    // Update the mood status in the UI
+    // This is a simplified example - in a real app, you'd update this after API confirmation
+    const updatedReceivedMoods = receivedMoods.map(mood => 
+      mood.id === response.moodId ? { ...mood, status: 'responded' as const } : mood
+    );
+    
+    // In a real app, you would update the state through a proper state management system
+    // For this example, we're just logging the updated moods
+    console.log('Updated moods:', updatedReceivedMoods);
   };
 
   const getEffectAnimation = (effect: { type: 'heat' | 'wind' | 'heartbeat'; intensity: number }) => {
@@ -154,8 +204,143 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
     }
   };
 
+  const [showHistory, setShowHistory] = useState(false);
+
+  const renderMoodHistory = () => {
+    if (!showHistory) return null;
+
+    return (
+      <div className="mt-8 space-y-6">
+        {/* Received Moods */}
+        {receivedMoods && receivedMoods.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-lg">Moods reçus</h3>
+            <div className="space-y-3">
+              {receivedMoods.map((mood) => (
+                <div
+                  key={mood.id}
+                  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{mood.emotion.emoji}</span>
+                      <div>
+                        <p className="font-medium">{mood.senderName}</p>
+                        <p className="text-sm text-gray-600">{mood.emotion.name}</p>
+                      </div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-sm ${mood.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                      {mood.status === 'pending' ? 'En attente' : 'Répondu'}
+                    </div>
+                  </div>
+                  {mood.status === 'pending' && (
+                    <div className="mt-4 flex space-x-3">
+                      <button
+                        className="flex-1 px-4 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors"
+                        onClick={() => handleRespondToMood({
+                          id: mood.id,
+                          emotion: mood.emotion,
+                          senderName: mood.senderName
+                        })}
+                      >
+                        Répondre
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sent Moods */}
+        {sentMoods && sentMoods.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-medium text-lg">Moods envoyés</h3>
+            <div className="space-y-3">
+              {sentMoods.map((mood) => (
+                <div
+                  key={mood.id}
+                  className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{mood.emotion.emoji}</span>
+                      <div>
+                        <p className="font-medium">À {mood.recipientName}</p>
+                        <p className="text-sm text-gray-600">{mood.emotion.name}</p>
+                      </div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-sm ${mood.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                      {mood.status === 'pending' ? 'En attente' : 'Reçu'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="mood-container relative overflow-hidden">
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={() => setShowHistory(!showHistory)}
+          className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 flex items-center space-x-2"
+        >
+          <span>{showHistory ? 'Masquer' : 'Afficher'} l'historique</span>
+          <svg
+            className={`w-5 h-5 transform transition-transform ${showHistory ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+      </div>
+
+      {renderMoodHistory()}
+
+      {selectedEmotion && selectedRecipient && !showRecipientModal && (
+        <div className="mb-6 p-4 rounded-lg border-2 border-primary-100 bg-primary-50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <span className="text-3xl mr-3">{selectedEmotion.emoji}</span>
+              <div>
+                <h3 className="font-medium">{selectedEmotion.name}</h3>
+                <p className="text-sm text-gray-600">Partagé avec {mockRecipients.find(r => r.id === selectedRecipient)?.name}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setSelectedEmotion(null);
+                setSelectedRecipient('');
+                setIntensity(5);
+              }}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          </div>
+          <div className="mt-4">
+            <button
+              onClick={() => {
+                setShowMessageModal(false);
+                setSelectedEmotion(null);
+                setSelectedRecipient('');
+                setIntensity(5);
+              }}
+              className="w-full px-4 py-2 bg-primary-100 text-primary-700 rounded-lg hover:bg-primary-200 transition-colors"
+            >
+              Envoyer un message de soutien
+            </button>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
         <div className="relative">
           {avatarUrl ? (
