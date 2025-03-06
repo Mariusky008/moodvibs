@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import MoodVibeResponse from './MoodVibeResponse';
+import { playSound } from '../../utils/soundEffects';
 
 const calendarViews = ['day', 'week', 'month'];
 
@@ -152,7 +153,7 @@ const MoodJournal: React.FC = () => {
         {/* Received Moods */}
         {receivedMoods.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-medium text-lg">Moods reçus</h3>
+            <h3 className="font-medium text-lg text-white">Moods reçus</h3>
             <div className="space-y-3">
               {receivedMoods.map((mood) => (
                 <div
@@ -195,7 +196,7 @@ const MoodJournal: React.FC = () => {
         {/* Sent Moods */}
         {sentMoods.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-medium text-lg">Moods envoyés</h3>
+            <h3 className="font-medium text-lg text-white">Moods envoyés</h3>
             <div className="space-y-3">
               {sentMoods.map((mood) => (
                 <div
@@ -222,7 +223,7 @@ const MoodJournal: React.FC = () => {
 
         {/* Incentive Moods */}
         <div className="mt-8 space-y-4">
-          <h3 className="font-medium text-lg">Suggestions de Moods</h3>
+          <h3 className="font-medium text-lg text-white">Suggestions de Moods</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Mood Vibe suggestion */}
             <motion.button
@@ -230,6 +231,7 @@ const MoodJournal: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               className="p-4 rounded-lg border-2 border-pink-200 bg-pink-50 hover:bg-pink-100 transition-all"
               onClick={() => {
+                playSound('click');
                 // Open the Mood Vibe modal directly
                 window.dispatchEvent(new CustomEvent('openMoodModal', { detail: { type: 'vibes', recipient: 'Marie' } }));
               }}
@@ -249,6 +251,7 @@ const MoodJournal: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               className="p-4 rounded-lg border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 transition-all"
               onClick={() => {
+                playSound('click');
                 // Open the Mood Pulse modal directly
                 window.dispatchEvent(new CustomEvent('openMoodModal', { detail: { type: 'pulse', recipient: 'Papa' } }));
               }}
@@ -268,6 +271,7 @@ const MoodJournal: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               className="p-4 rounded-lg border-2 border-purple-200 bg-purple-50 hover:bg-purple-100 transition-all"
               onClick={() => {
+                playSound('click');
                 // Open the Mood Challenge modal directly
                 window.dispatchEvent(new CustomEvent('openMoodModal', { detail: { type: 'challenge', recipient: 'Thomas' } }));
               }}
@@ -287,8 +291,17 @@ const MoodJournal: React.FC = () => {
               whileTap={{ scale: 0.98 }}
               className="p-4 rounded-lg border-2 border-green-200 bg-green-50 hover:bg-green-100 transition-all"
               onClick={() => {
-                // Open the Mood Vibe modal directly
-                window.dispatchEvent(new CustomEvent('openMoodModal', { detail: { type: 'vibes', recipient: 'Sophie' } }));
+                try {
+                  playSound('click');
+                  const moodEvent = new CustomEvent('openMoodModal', {
+                    detail: { type: 'vibes', recipient: 'Sophie' },
+                    bubbles: true,
+                    cancelable: true
+                  });
+                  window.dispatchEvent(moodEvent);
+                } catch (error) {
+                  console.error('Error dispatching mood event:', error);
+                }
               }}
             >
               <div className="flex items-center space-x-3">
@@ -307,27 +320,6 @@ const MoodJournal: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 md:transform md:transition-all md:hover:scale-105 w-full max-w-full md:max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center mb-6 text-center sm:text-left">
-        <motion.span 
-          className="text-3xl sm:text-4xl mx-auto sm:mx-0 sm:mr-3 mb-2 sm:mb-0"
-          animate={{ 
-            rotate: [0, -10, 10, -10, 0],
-            scale: [1, 1.1, 1, 1.1, 1]
-          }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            repeatType: "reverse"
-          }}
-        >📔</motion.span>
-        <motion.h2 
-          className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-primary-500 to-purple-500 text-transparent bg-clip-text"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >Journal de mes moods</motion.h2>
-      </div>
-      
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary-500"></div>
@@ -346,11 +338,15 @@ const MoodJournal: React.FC = () => {
               emoji: selectedMood.emoji
             }}
             onRespond={(response) => {
-              setMoodEntries(moodEntries.map(mood =>
-                mood.id === response.moodId
-                  ? { ...mood, status: 'responded' }
-                  : mood
-              ));
+              if (response.action) {
+                setMoodEntries(moodEntries.map(mood =>
+                  mood.id === moodId
+                    ? { ...mood, status: 'responded' }
+                    : mood
+                ));
+                setShowMoodVibeResponse(false);
+                setSelectedMood(null);
+              }
             }}
             onClose={() => {
               setShowMoodVibeResponse(false);

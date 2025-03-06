@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { playSound, initSounds } from '../../utils/soundEffects';
 import MoodVibeResponse from './MoodVibeResponse';
+import MoodPulseAnimation from './MoodPulseAnimation';
 
 type Emotion = {
   name: string;
   emoji: string;
   color: string;
   effect: {
-    type: 'heat' | 'wind' | 'heartbeat' | 'wave' | 'sparkle';
+    type: 'heat' | 'wind' | 'heartbeat' | 'wave' | 'sparkle' | 'pulse';
     intensity: number;
   };
 };
@@ -19,6 +21,9 @@ type TestMoodButtonProps = {
 };
 
 const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 'top-right', id = 'default' }) => {
+  useEffect(() => {
+    initSounds();
+  }, []);
   const [showTestNotification, setShowTestNotification] = useState(false);
   const [testMood, setTestMood] = useState<{emotion: Emotion, senderName: string} | null>(null);
   const [showResponsePopup, setShowResponsePopup] = useState(false);
@@ -28,10 +33,12 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
   const [currentAction, setCurrentAction] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [moodId, setMoodId] = useState('');
+  const [showPulseAnimation, setShowPulseAnimation] = useState(false);
   const componentMounted = useRef(true);
 
   const handleTestMoodReceive = () => {
     if (!componentMounted.current) return false;
+    playSound('click');
     
     setShowTestNotification(false);
     setTestMood(null);
@@ -39,7 +46,19 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
     setTimeout(() => {
       if (!componentMounted.current) return;
       
-      const randomEmotion = emotions[Math.floor(Math.random() * emotions.length)];
+      const moodTypes: Emotion[] = [
+        {
+          name: "Soutien silencieux",
+          emoji: "💙",
+          color: "#3B82F6",
+          effect: {
+            type: 'pulse' as const,
+            intensity: 0.8
+          }
+        },
+        ...emotions
+      ];
+      const randomEmotion = moodTypes[Math.floor(Math.random() * moodTypes.length)];
       const mockSenders = ['Sophie', 'Thomas', 'Emma', 'Lucas', 'Julie'];
       const randomSender = mockSenders[Math.floor(Math.random() * mockSenders.length)];
       
@@ -47,7 +66,11 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
         emotion: randomEmotion,
         senderName: randomSender
       });
+      if (randomEmotion.effect.type === "pulse") {
+        setShowPulseAnimation(true);
+      }
       setShowTestNotification(true);
+      playSound('mood-received');
     }, 100);
 
     return false;
@@ -97,6 +120,7 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
+                  playSound('click');
                   // Generate a unique ID for this mood
                   const uniqueId = `mood-${Date.now()}`;
                   setMoodId(uniqueId);
@@ -109,7 +133,10 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => setShowTestNotification(false)}
+                onClick={() => {
+                  playSound('click');
+                  setShowTestNotification(false);
+                }}
                 className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-medium transition-colors shadow-sm"
               >
                 Fermer
@@ -208,6 +235,7 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                     </button>
                     <button
                       onClick={() => {
+                        playSound('success');
                         setShowSuccessMessage(true);
                         setTimeout(() => {
                           setShowSuccessMessage(false);
@@ -227,6 +255,12 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
         )}
       </AnimatePresence>
       
+      {/* Pulse Animation */}
+      <MoodPulseAnimation 
+        isVisible={showPulseAnimation}
+        onAnimationComplete={() => setShowPulseAnimation(false)}
+      />
+
       {/* MoodVibeResponse Component Integration */}
       <AnimatePresence>
         {showMoodVibeResponse && testMood && (

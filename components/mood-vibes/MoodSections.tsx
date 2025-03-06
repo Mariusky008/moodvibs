@@ -12,8 +12,8 @@ const MoodSections: React.FC = () => {
         <DailyImpact />
         <MoodJournal />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="mood-section bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12 px-6 py-8">
+          <div className="mood-section bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl p-8 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-gray-100">
             <div className="flex items-center mb-4">
               <span className="text-4xl mr-3">🌊</span>
               <h2 className="text-2xl font-bold">Mood Vibes</h2>
@@ -28,7 +28,7 @@ const MoodSections: React.FC = () => {
             />
           </div>
 
-          <div className="mood-section bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+          <div className="mood-section bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl p-8 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-gray-100">
             <div className="flex items-center mb-4">
               <span className="text-4xl mr-3">💫</span>
               <h2 className="text-2xl font-bold">Mood Pulse</h2>
@@ -43,7 +43,7 @@ const MoodSections: React.FC = () => {
             />
           </div>
 
-          <div className="mood-section bg-white rounded-xl shadow-lg p-6 transform transition-all hover:scale-105">
+          <div className="mood-section bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-xl p-8 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl border border-gray-100">
             <div className="flex items-center mb-4">
               <span className="text-4xl mr-3">💪</span>
               <h2 className="text-2xl font-bold">Mood Challenge</h2>

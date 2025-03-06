@@ -1,313 +1,396 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type ResponseCategory = 'direct' | 'physical';
-
-type ResponseAction = {
+type Action = {
   id: string;
   title: string;
-  emoji: string;
   description: string;
-  category: ResponseCategory;
-  type: string;
+  emoji: string;
+  type: 'connection' | 'sensory' | 'decompression' | 'comfort' | 'physical';
+};
+
+type Emotion = {
+  name: string;
+  emoji: string;
 };
 
 type MoodVibeResponseProps = {
-  moodId: string;
-  senderName: string;
-  emotion: {
-    name: string;
-    emoji: string;
-  };
-  onRespond: (response: {
-    moodId: string;
-    actionId: string;
-    category: ResponseCategory;
-    customMessage?: string;
+  moodId?: string;
+  senderName?: string;
+  emotion?: Emotion;
+  onRespond?: (response: {
+    action: Action;
+    message?: string;
+    file?: File;
   }) => void;
-  onClose: () => void;
+  onClose?: () => void;
 };
 
-const directActions: ResponseAction[] = [
-  {
-    id: 'video_call',
-    title: "T'as une minute ? On s'appelle en visio tout de suite.",
-    emoji: '📹',
-    description: 'Démarrer un appel vidéo instantané',
-    category: 'direct',
-    type: 'connection'
-  },
-  {
-    id: 'voice_message',
-    title: "J'enregistre un message vocal pour toi, check tes audios !",
-    emoji: '🎤',
-    description: 'Envoyer un message vocal',
-    category: 'direct',
-    type: 'connection'
-  },
-  {
-    id: 'funny_video',
-    title: "Je t'envoie une vidéo drôle de moi pour te distraire.",
-    emoji: '🎥',
-    description: 'Partager une vidéo personnelle',
-    category: 'direct',
-    type: 'connection'
-  },
-  {
-    id: 'share_song',
-    title: "Écoute cette chanson, elle pourrait te parler.",
-    emoji: '🎵',
-    description: 'Partager une chanson (Spotify/YouTube)',
-    category: 'direct',
-    type: 'sensory'
-  },
-  {
-    id: 'share_sound',
-    title: "Si ton émotion était un bruit, je t'envoie un son qui l'exprime !",
-    emoji: '🔊',
-    description: 'Partager un son expressif',
-    category: 'direct',
-    type: 'sensory'
-  },
-  {
-    id: 'share_image',
-    title: "Regarde cette image, elle résume ce que je ressens en te lisant.",
-    emoji: '🖼️',
-    description: 'Partager une image évocatrice',
-    category: 'direct',
-    type: 'sensory'
-  }
-];
-
-const physicalActions: ResponseAction[] = [
-  {
-    id: 'running',
-    title: "Viens, on va courir 10 minutes, histoire d'évacuer tout ça.",
-    emoji: '🏃',
-    description: 'Proposer une activité physique',
-    category: 'physical',
-    type: 'decompression'
-  },
-  {
-    id: 'rage_room',
-    title: "Tu veux qu'on aille casser quelque chose (dans une rage room) ?",
-    emoji: '🔨',
-    description: 'Proposer une séance de rage room',
-    category: 'physical',
-    type: 'decompression'
-  },
-  {
-    id: 'hug',
-    title: "T'as besoin d'un câlin ? Je suis là !",
-    emoji: '🤗',
-    description: 'Offrir un câlin réconfortant',
-    category: 'physical',
-    type: 'comfort'
-  },
-  {
-    id: 'meditation',
-    title: "Viens, on se pose en silence 5 minutes et on respire.",
-    emoji: '🧘',
-    description: 'Moment de méditation partagé',
-    category: 'physical',
-    type: 'relaxation'
-  }
-];
-
-const MoodVibeResponse: React.FC<MoodVibeResponseProps> = ({
-  moodId,
-  senderName,
-  emotion,
-  onRespond,
-  onClose
-}) => {
-  const [selectedCategory, setSelectedCategory] = useState<ResponseCategory>('direct');
-  const [selectedAction, setSelectedAction] = useState<ResponseAction | null>(null);
+const MoodVibeResponse: React.FC<MoodVibeResponseProps> = ({ moodId, senderName, emotion, onRespond, onClose }) => {
+  const [selectedCategory, setSelectedCategory] = useState<'direct' | 'physical'>('direct');
+  const [selectedAction, setSelectedAction] = useState<Action | null>(null);
   const [customMessage, setCustomMessage] = useState('');
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [filePreview, setFilePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleActionSelect = (action: ResponseAction) => {
+  const directActions: Action[] = [
+    {
+      id: 'hug',
+      title: 'Câlin virtuel',
+      description: 'Envoyer un câlin réconfortant',
+      emoji: '🤗',
+      type: 'comfort'
+    },
+    {
+      id: 'listen',
+      title: 'Écoute attentive',
+      description: 'Offrir une oreille attentive',
+      emoji: '👂',
+      type: 'connection'
+    },
+    {
+      id: 'meditation',
+      title: 'Méditation guidée',
+      description: 'Proposer une séance de méditation ensemble',
+      emoji: '🧘',
+      type: 'decompression'
+    },
+    {
+      id: 'breathing',
+      title: 'Exercices de respiration',
+      description: 'Partager des techniques de respiration apaisantes',
+      emoji: '🌬️',
+      type: 'decompression'
+    },
+    {
+      id: 'music',
+      title: 'Playlist réconfortante',
+      description: 'Partager une playlist pour apaiser les émotions',
+      emoji: '🎵',
+      type: 'sensory'
+    },
+    {
+      id: 'gratitude',
+      title: 'Moment de gratitude',
+      description: 'Partager trois choses positives de la journée',
+      emoji: '🙏',
+      type: 'connection'
+    }
+  ];
+
+  const physicalActions: Action[] = [
+    {
+      id: 'walk',
+      title: 'Promenade',
+      description: 'Proposer une promenade ensemble',
+      emoji: '🚶',
+      type: 'physical'
+    },
+    {
+      id: 'exercise',
+      title: 'Exercice',
+      description: 'Faire de l\'exercice ensemble',
+      emoji: '💪',
+      type: 'physical'
+    },
+    {
+      id: 'yoga',
+      title: 'Séance de yoga',
+      description: 'Pratiquer le yoga pour se détendre',
+      emoji: '🧘‍♀️',
+      type: 'physical'
+    },
+    {
+      id: 'dance',
+      title: 'Danse libre',
+      description: 'Bouger en musique pour libérer les tensions',
+      emoji: '💃',
+      type: 'physical'
+    },
+    {
+      id: 'stretch',
+      title: 'Étirements doux',
+      description: 'Séance d\'étirements pour se détendre',
+      emoji: '🤸',
+      type: 'physical'
+    },
+    {
+      id: 'nature',
+      title: 'Bain de nature',
+      description: 'Se reconnecter à la nature ensemble',
+      emoji: '🌳',
+      type: 'physical'
+    }
+  ];
+
+  const handleActionSelect = (action: Action) => {
     setSelectedAction(action);
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setAttachedFile(file);
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          setFilePreview(e.target?.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        setFilePreview(null);
+      }
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setAttachedFile(null);
+    setFilePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleRespond = () => {
-    if (selectedAction) {
+    if (selectedAction && onRespond) {
       onRespond({
-        moodId,
-        actionId: selectedAction.id,
-        category: selectedAction.category,
-        customMessage: customMessage.trim() || undefined
+        action: selectedAction,
+        message: customMessage,
+        file: attachedFile || undefined
       });
-      setShowConfirmation(true);
     }
   };
 
-  // Animation variants for framer-motion
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.9 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { 
-        type: "spring", 
-        damping: 25, 
-        stiffness: 300 
-      }
-    },
-    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: (custom: number) => ({
-      opacity: 1,
-      y: 0,
-      transition: { 
-        delay: custom * 0.1,
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    })
-  };
-
-  const buttonVariants = {
-    hover: { scale: 1.03, transition: { duration: 0.2 } },
-    tap: { scale: 0.97, transition: { duration: 0.1 } },
-  };
-
-  const getCategoryColor = (category: ResponseCategory, isSelected: boolean) => {
-    if (category === 'direct') {
-      return isSelected 
-        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-200' 
-        : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
-    } else {
-      return isSelected 
-        ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md shadow-green-200' 
-        : 'bg-gray-100 text-gray-700 hover:bg-gray-200';
-    }
-  };
-
-  const getActionTypeColor = (type: string) => {
-    switch(type) {
-      case 'connection': return 'bg-blue-50 border-blue-100';
-      case 'sensory': return 'bg-purple-50 border-purple-100';
-      case 'decompression': return 'bg-orange-50 border-orange-100';
-      case 'comfort': return 'bg-pink-50 border-pink-100';
-      case 'relaxation': return 'bg-green-50 border-green-100';
-      default: return 'bg-gray-50 border-gray-100';
+  const getActionTypeColor = (type: Action['type']) => {
+    switch (type) {
+      case 'connection':
+        return 'border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/30';
+      case 'sensory':
+        return 'border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/30';
+      case 'decompression':
+        return 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/30';
+      case 'comfort':
+        return 'border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-900/30';
+      case 'physical':
+        return 'border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30';
+      default:
+        return 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/30';
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2 sm:p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl relative shadow-2xl max-h-[90vh] flex flex-col">
-          <div className="p-4 sm:p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-            <div className="flex justify-between items-center mb-4 sm:mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
-                Répondre à {senderName}
-              </h2>
-              <button 
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+    <motion.div
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={() => onClose && onClose()}
+    >
+      <motion.div
+        className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-xl"
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6">
+          {/* Header with sender info and close button */}
+          {senderName && emotion && (
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center space-x-3">
+                <span className="text-3xl">{emotion.emoji}</span>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100">{senderName}</h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{emotion.name}</p>
+                </div>
+              </div>
+              <motion.button
+                onClick={() => onClose && onClose()}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
-              </button>
-            </div>
-
-            <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-3 sm:p-4 rounded-xl mb-4 sm:mb-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center space-x-3 sm:space-x-4">
-                <span className="text-2xl sm:text-3xl">
-                  {emotion.emoji}
-                </span>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 font-medium">En réponse à :</p>
-                  <p className="font-semibold text-gray-800 text-sm sm:text-base">{emotion.name}</p>
-                </div>
-              </div>
-            </div>
-
-          {showConfirmation ? (
-            <div className="text-center py-6 sm:py-8">
-              <div className="text-3xl sm:text-4xl mb-3 sm:mb-4">✨</div>
-              <h3 className="text-lg sm:text-xl font-semibold text-green-600 mb-2">Réponse envoyée !</h3>
-              <p className="text-sm sm:text-base text-gray-600">Votre réponse a été partagée avec {senderName}</p>
-            </div>
-          ) : (
-            <div>
-              <div className="space-y-4">
-                <div className="flex space-x-2 sm:space-x-4">
-                  <button
-                    onClick={() => setSelectedCategory('direct')}
-                    className={`flex-1 px-2 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base ${selectedCategory === 'direct' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'}`}
-                  >
-                    Messages directs
-                  </button>
-                  <button
-                    onClick={() => setSelectedCategory('physical')}
-                    className={`flex-1 px-2 sm:px-4 py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base ${selectedCategory === 'physical' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-700'}`}
-                  >
-                    Actions physiques
-                  </button>
-                </div>
-
-                {selectedAction ? (
-                  <div className="space-y-4">
-                    <div className="p-3 sm:p-4 bg-gray-50 rounded-lg">
-                      <div className="flex items-start sm:items-center space-x-2 sm:space-x-3 mb-3 sm:mb-4">
-                        <span className="text-xl sm:text-2xl mt-1 sm:mt-0">{selectedAction.emoji}</span>
-                        <div>
-                          <p className="font-medium text-sm sm:text-base">{selectedAction.title}</p>
-                          <p className="text-xs sm:text-sm text-gray-600">{selectedAction.description}</p>
-                        </div>
-                      </div>
-                      <textarea
-                        value={customMessage}
-                        onChange={(e) => setCustomMessage(e.target.value)}
-                        placeholder="Ajouter un message personnalisé..."
-                        className="w-full p-2 sm:p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="flex space-x-2 sm:space-x-4">
-                      <button
-                        onClick={() => setSelectedAction(null)}
-                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg hover:bg-gray-50 text-sm sm:text-base"
-                      >
-                        Retour
-                      </button>
-                      <button
-                        onClick={handleRespond}
-                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm sm:text-base"
-                      >
-                        Envoyer
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid gap-4">
-                    {(selectedCategory === 'direct' ? directActions : physicalActions).map((action) => (
-                      <button
-                        key={action.id}
-                        onClick={() => handleActionSelect(action)}
-                        className="p-3 sm:p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left flex items-start sm:items-center space-x-2 sm:space-x-3"
-                      >
-                        <span className="text-xl sm:text-2xl mt-1 sm:mt-0">{action.emoji}</span>
-                        <div>
-                          <p className="font-medium text-sm sm:text-base">{action.title}</p>
-                          <p className="text-xs sm:text-sm text-gray-600">{action.description}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              </motion.button>
             </div>
           )}
+          <div className="space-y-6">
+            <div className="flex space-x-3 bg-gray-100 dark:bg-gray-900 p-2 rounded-xl">
+              <motion.button
+                onClick={() => setSelectedCategory('direct')}
+                className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-300 ${selectedCategory === 'direct' ? 'bg-white dark:bg-gray-700 shadow-md' : 'hover:bg-white/50 dark:hover:bg-gray-700/50'}`}
+                whileHover={selectedCategory !== 'direct' ? { scale: 1.02 } : {}}
+                whileTap={selectedCategory !== 'direct' ? { scale: 0.98 } : {}}
+              >
+                <span className="text-xl mr-2">💭</span>
+                <span className={`font-medium ${selectedCategory === 'direct' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'}`}>Actions directes</span>
+              </motion.button>
+              <motion.button
+                onClick={() => setSelectedCategory('physical')}
+                className={`flex-1 flex items-center justify-center px-4 py-3 rounded-lg transition-all duration-300 ${selectedCategory === 'physical' ? 'bg-white dark:bg-gray-700 shadow-md' : 'hover:bg-white/50 dark:hover:bg-gray-700/50'}`}
+                whileHover={selectedCategory !== 'physical' ? { scale: 1.02 } : {}}
+                whileTap={selectedCategory !== 'physical' ? { scale: 0.98 } : {}}
+              >
+                <span className="text-xl mr-2">🏃</span>
+                <span className={`font-medium ${selectedCategory === 'physical' ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'}`}>Actions physiques</span>
+              </motion.button>
+            </div>
+
+            {/* Action Selection */}
+            <AnimatePresence mode="wait">
+              {selectedAction ? (
+                <motion.div 
+                  className="space-y-4"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <motion.div 
+                    className="p-5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 shadow-sm"
+                    initial={{ scale: 0.95 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", damping: 20 }}
+                  >
+                    <div className="flex items-start space-x-4 mb-4">
+                      <motion.span 
+                        className="text-3xl"
+                        animate={{ 
+                          scale: [1, 1.2, 1],
+                          rotate: [0, 10, -10, 0]
+                        }}
+                        transition={{ 
+                          duration: 2,
+                          repeat: Infinity,
+                          repeatType: "reverse"
+                        }}
+                      >
+                        {selectedAction.emoji}
+                      </motion.span>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">{selectedAction.title}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{selectedAction.description}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <textarea
+                          value={customMessage}
+                          onChange={(e) => setCustomMessage(e.target.value)}
+                          placeholder="Ajouter un message personnalisé..."
+                          className="w-full p-4 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 transition-all duration-200 ease-in-out"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Joindre un fichier</p>
+                          <label 
+                            htmlFor="file-upload" 
+                            className="cursor-pointer inline-flex items-center px-4 py-2 rounded-lg bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium transition-colors"
+                          >
+                            {attachedFile ? 'Changer le fichier' : 'Parcourir'}
+                          </label>
+                          <input
+                            id="file-upload"
+                            ref={fileInputRef}
+                            type="file"
+                            onChange={handleFileChange}
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx"
+                          />
+                        </div>
+
+                        {attachedFile && (
+                          <motion.div 
+                            className="p-3 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3 overflow-hidden">
+                                {filePreview ? (
+                                  <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 border border-gray-200 dark:border-gray-700">
+                                    <img src={filePreview} alt="Aperçu" className="w-full h-full object-cover" />
+                                  </div>
+                                ) : (
+                                  <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-blue-500 dark:text-blue-400 text-xl">📎</span>
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{attachedFile.name}</p>
+                                  <p className="text-xs text-gray-500 dark:text-gray-400">{(attachedFile.size / 1024).toFixed(1)} KB</p>
+                                </div>
+                              </div>
+                              <motion.button
+                                onClick={handleRemoveFile}
+                                className="p-2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <div className="flex space-x-3">
+                    <motion.button
+                      onClick={() => setSelectedAction(null)}
+                      className="flex-1 px-6 py-3 rounded-xl border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Retour
+                    </motion.button>
+                    <motion.button
+                      onClick={handleRespond}
+                      className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 text-white font-medium hover:from-blue-700 hover:to-violet-700 transition-colors shadow-lg shadow-blue-500/25"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      Envoyer
+                    </motion.button>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {(selectedCategory === 'direct' ? directActions : physicalActions).map((action) => (
+                    <motion.button
+                      key={action.id}
+                      onClick={() => handleActionSelect(action)}
+                      className={`p-4 rounded-xl border ${getActionTypeColor(action.type)} transition-all duration-200`}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-start space-x-4">
+                        <span className="text-2xl">{action.emoji}</span>
+                        <div className="flex-1 text-left">
+                          <h3 className="font-medium text-gray-900 dark:text-gray-100">{action.title}</h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{action.description}</p>
+                        </div>
+                      </div>
+                    </motion.button>
+                  ))}
+                </div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 

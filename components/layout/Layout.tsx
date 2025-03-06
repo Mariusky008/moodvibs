@@ -45,6 +45,12 @@ const emotions = [
     emoji: '🌊', 
     color: '#98FB98',
     effect: { type: 'wave', intensity: 0.4 }
+  },
+  { 
+    name: 'Soutien silencieux', 
+    emoji: '💙', 
+    color: '#3B82F6',
+    effect: { type: 'pulse', intensity: 0.8 }
   }
 ];
 
@@ -112,9 +118,50 @@ const Layout = ({ children, title = 'MoodVibes' }: Props) => {
                     </svg>
                   </button>
                   <div className="relative z-50">
-                    <TestMoodButton emotions={emotions} position="top-right" id="header-dice" />
+                    <TestMoodButton 
+                      emotions={[
+                        { 
+                          name: 'Je bouillonne', 
+                          emoji: '🔥', 
+                          color: '#FF4500',
+                          effect: { type: 'heat', intensity: 0.8 }
+                        },
+                        { 
+                          name: 'Besoin de souffler', 
+                          emoji: '💨', 
+                          color: '#6495ED',
+                          effect: { type: 'wind', intensity: 0.6 }
+                        },
+                        { 
+                          name: 'Envie d\'un câlin', 
+                          emoji: '💙', 
+                          color: '#FF69B4',
+                          effect: { type: 'heartbeat', intensity: 0.7 }
+                        },
+                        { 
+                          name: 'Joyeux', 
+                          emoji: '✨', 
+                          color: '#FFD700',
+                          effect: { type: 'sparkle', intensity: 0.9 }
+                        },
+                        { 
+                          name: 'Apaisé', 
+                          emoji: '🌊', 
+                          color: '#98FB98',
+                          effect: { type: 'wave', intensity: 0.4 }
+                        },
+                        { 
+                          name: 'Soutien silencieux', 
+                          emoji: '💙', 
+                          color: '#3B82F6',
+                          effect: { type: 'pulse', intensity: 0.8 }
+                        }
+                      ]} 
+                      position="top-right" 
+                      id="header-dice" 
+                    />
                   </div>
-                </div>-
+                </div>
                 
                 {/* Desktop menu */}
                 <div className="hidden md:flex items-center space-x-6">

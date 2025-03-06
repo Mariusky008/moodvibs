@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { playSound, initSounds } from '../../utils/soundEffects';
 import MoodVibeResponse from './MoodVibeResponse';
 
 type Emotion = {
@@ -53,6 +54,9 @@ const emotions: Emotion[] = [
 ];
 
 const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, onSendVibe, receivedMoods = [], sentMoods = [] }) => {
+  useEffect(() => {
+    initSounds();
+  }, []);
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
@@ -107,6 +111,7 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
   };
 
   const handleEmotionSelect = (emotion: Emotion) => {
+    playSound('click');
     setSelectedEmotion(emotion);
     setShowPreviewModal(true);
   };
@@ -121,6 +126,7 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
 
   const handleSendVibe = () => {
     if (selectedEmotion && selectedRecipient && onSendVibe) {
+      playSound('mood-sent');
       setIsAnimating(true);
       
       // Create a modified emotion object with the user-selected intensity
@@ -150,6 +156,7 @@ const MoodVibe: React.FC<MoodVibeProps> = ({ userId, userName = '', avatarUrl, o
     emotion: Emotion;
     senderName: string;
   }) => {
+    playSound('click');
     setSelectedMoodToRespond(mood);
     setShowResponseModal(true);
   };

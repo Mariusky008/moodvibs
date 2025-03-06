@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { playSound, initSounds } from '../../utils/soundEffects';
 import TestMoodButton from './TestMoodButton';
 
 type Emotion = {
@@ -64,6 +65,9 @@ const emotions: Emotion[] = [
 ];
 
 const MoodInput: React.FC = () => {
+  useEffect(() => {
+    initSounds();
+  }, []);
   const [selectedEmotion, setSelectedEmotion] = useState<Emotion | null>(null);
   const [intensity, setIntensity] = useState<number>(5);
   const [note, setNote] = useState<string>('');
@@ -71,6 +75,7 @@ const MoodInput: React.FC = () => {
   const router = useRouter();
 
   const handleEmotionSelect = (emotion: Emotion) => {
+    playSound('click');
     setSelectedEmotion(emotion);
   };
 
@@ -78,6 +83,8 @@ const MoodInput: React.FC = () => {
     e.preventDefault();
     
     if (!selectedEmotion) return;
+    
+    playSound('mood-sent');
     
     setIsSubmitting(true);
     

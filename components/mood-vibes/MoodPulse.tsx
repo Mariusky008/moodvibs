@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useAnimation } from 'framer-motion';
+import MoodPulseAnimation from './MoodPulseAnimation';
 
 type MoodPulseProps = {
   userId: string;
