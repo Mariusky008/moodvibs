@@ -76,6 +76,34 @@ const MoodVibeResponse: React.FC<MoodVibeResponseProps> = ({ moodId, senderName,
       description: 'Partager trois choses positives de la journée',
       emoji: '🙏',
       type: 'connection'
+    },
+    {
+      id: 'video_call',
+      title: 'Appel vidéo',
+      description: 'Proposer un moment d\'échange en visio',
+      emoji: '📱',
+      type: 'connection'
+    },
+    {
+      id: 'positive_affirmation',
+      title: 'Affirmations positives',
+      description: 'Partager des phrases motivantes et encourageantes',
+      emoji: '✨',
+      type: 'comfort'
+    },
+    {
+      id: 'art_therapy',
+      title: 'Art-thérapie',
+      description: 'Proposer une activité créative apaisante',
+      emoji: '🎨',
+      type: 'sensory'
+    },
+    {
+      id: 'mindfulness',
+      title: 'Pleine conscience',
+      description: 'Exercice de présence et d\'ancrage dans l\'instant',
+      emoji: '🌱',
+      type: 'decompression'
     }
   ];
 
@@ -120,6 +148,48 @@ const MoodVibeResponse: React.FC<MoodVibeResponseProps> = ({ moodId, senderName,
       title: 'Bain de nature',
       description: 'Se reconnecter à la nature ensemble',
       emoji: '🌳',
+      type: 'physical'
+    },
+    {
+      id: 'cooking',
+      title: 'Cuisine thérapeutique',
+      description: 'Préparer un repas sain et réconfortant ensemble',
+      emoji: '🍳',
+      type: 'physical'
+    },
+    {
+      id: 'gardening',
+      title: 'Jardinage',
+      description: 'S\'occuper des plantes pour se reconnecter à la terre',
+      emoji: '🌱',
+      type: 'physical'
+    },
+    {
+      id: 'swimming',
+      title: 'Natation',
+      description: 'Se détendre dans l\'eau pour apaiser le corps et l\'esprit',
+      emoji: '🏊',
+      type: 'physical'
+    },
+    {
+      id: 'cycling',
+      title: 'Balade à vélo',
+      description: 'Explorer les environs à vélo pour changer d\'air',
+      emoji: '🚲',
+      type: 'physical'
+    },
+    {
+      id: 'massage',
+      title: 'Massage relaxant',
+      description: 'Proposer un massage pour détendre les tensions',
+      emoji: '💆',
+      type: 'physical'
+    },
+    {
+      id: 'hiking',
+      title: 'Randonnée',
+      description: 'Partir en randonnée pour se ressourcer en pleine nature',
+      emoji: '🥾',
       type: 'physical'
     }
   ];
@@ -181,20 +251,20 @@ const MoodVibeResponse: React.FC<MoodVibeResponseProps> = ({ moodId, senderName,
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 overflow-y-auto py-4"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onClick={() => onClose && onClose()}
     >
       <motion.div
-        className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl mx-4 overflow-hidden shadow-xl"
+        className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl mx-4 shadow-xl my-auto max-h-[90vh] overflow-hidden"
         initial={{ scale: 0.9, y: 20 }}
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.9, y: 20 }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto max-h-[80vh]">
           {/* Header with sender info and close button */}
           {senderName && emotion && (
             <div className="flex items-center justify-between mb-6">

@@ -3,7 +3,8 @@ import Head from 'next/head'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const title = pageProps.title ? `${pageProps.title} | MoodVibes` : 'MoodVibes'
+  // Modified to avoid using optional chaining directly
+  const title = pageProps && pageProps.title ? `${pageProps.title} | MoodVibes` : 'MoodVibes'
   return (
     <div className="min-h-screen bg-background">
       <Head>

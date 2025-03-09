@@ -7,6 +7,7 @@ import MoodVibe from '../mood-vibes/MoodVibe';
 import MoodPulse from '../mood-vibes/MoodPulse';
 import MoodChallenge from '../mood-vibes/MoodChallenge';
 import TestMoodButton from '../mood-vibes/TestMoodButton';
+import PointsSystem from '../mood-vibes/PointsSystem';
 
 type Props = {
   children?: ReactNode;
@@ -87,6 +88,16 @@ const Layout = ({ children, title = 'MoodVibes' }: Props) => {
             <nav className="container mx-auto px-4 py-4">
               <div className="flex justify-between items-center">
                 <Link href="/" className="text-2xl font-bold text-primary-600">MoodVibes</Link>
+                
+                {/* Points System in top right for desktop */}
+                <div className="hidden md:block fixed top-4 right-4 z-[100] w-80">
+                  <PointsSystem compact={true} initialPoints={145} />
+                </div>
+
+                {/* Points System for mobile */}
+                <div className="md:hidden fixed top-16 left-4 right-4 z-[100]">
+                  <PointsSystem compact={true} initialPoints={145} />
+                </div>
                 
                 {/* Mobile menu button */}
                 <div className="flex items-center space-x-4">

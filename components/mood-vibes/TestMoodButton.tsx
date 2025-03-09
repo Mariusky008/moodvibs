@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { playSound, initSounds } from '../../utils/soundEffects';
 import MoodVibeResponse from './MoodVibeResponse';
 import MoodPulseAnimation from './MoodPulseAnimation';
+import MoodMusicResponse from './MoodMusicResponse';
 
 type Emotion = {
   name: string;
@@ -28,13 +29,27 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
   const [testMood, setTestMood] = useState<{emotion: Emotion, senderName: string} | null>(null);
   const [showResponsePopup, setShowResponsePopup] = useState(false);
   const [showMoodVibeResponse, setShowMoodVibeResponse] = useState(false);
+  const [showMoodMusicResponse, setShowMoodMusicResponse] = useState(false);
   const [responseMessage, setResponseMessage] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState('');
   const [currentAction, setCurrentAction] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [moodId, setMoodId] = useState('');
   const [showPulseAnimation, setShowPulseAnimation] = useState(false);
+  const [currentMusic, setCurrentMusic] = useState<{
+    title: string;
+    artist: string;
+    audioUrl: string;
+  } | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const componentMounted = useRef(true);
+
+  const mockMusicLibrary = [
+    { title: 'Bohemian Rhapsody', artist: 'Queen', audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3' },
+    { title: 'Billie Jean', artist: 'Michael Jackson', audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3' },
+    { title: 'Imagine', artist: 'John Lennon', audioUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3' },
+  ];
 
   const handleTestMoodReceive = () => {
     if (!componentMounted.current) return false;
@@ -42,40 +57,69 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
     
     setShowTestNotification(false);
     setTestMood(null);
+    setCurrentMusic(null);
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
 
     setTimeout(() => {
       if (!componentMounted.current) return;
       
-      const moodTypes: Emotion[] = [
-        {
-          name: "Soutien silencieux",
-          emoji: "💙",
-          color: "#3B82F6",
-          effect: {
-            type: 'pulse' as const,
-            intensity: 0.8
-          }
-        },
-        ...emotions
-      ];
-      const randomEmotion = moodTypes[Math.floor(Math.random() * moodTypes.length)];
-      const mockSenders = ['Sophie', 'Thomas', 'Emma', 'Lucas', 'Julie'];
-      const randomSender = mockSenders[Math.floor(Math.random() * mockSenders.length)];
+      // Always send music with Thomas as sender and Imagine by John Lennon as the song
+      const imagineMusic = mockMusicLibrary.find(music => 
+        music.title === 'Imagine' && music.artist === 'John Lennon'
+      ) || mockMusicLibrary[2]; // Fallback to the third item which should be Imagine
+      
+      setCurrentMusic(imagineMusic);
+      const musicMood = {
+        name: "Partage musical",
+        emoji: "🎵",
+        color: "#9C27B0",
+        effect: {
+          type: 'pulse' as const,
+          intensity: 0.8
+        }
+      };
       
       setTestMood({
-        emotion: randomEmotion,
-        senderName: randomSender
+        emotion: musicMood,
+        senderName: 'Thomas'
       });
-      if (randomEmotion.effect.type === "pulse") {
-        setShowPulseAnimation(true);
-      }
+      
       setShowTestNotification(true);
       playSound('mood-received');
     }, 100);
 
     return false;
   };
-  
+
+  const togglePlayPause = () => {
+    if (!audioRef.current || !currentMusic) return;
+
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  useEffect(() => {
+    if (currentMusic && !audioRef.current) {
+      audioRef.current = new Audio(currentMusic.audioUrl);
+      audioRef.current.addEventListener('ended', () => setIsPlaying(false));
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current.removeEventListener('ended', () => setIsPlaying(false));
+        audioRef.current = null;
+      }
+    };
+  }, [currentMusic]);
+
   useEffect(() => {
     componentMounted.current = true;
     return () => {
@@ -111,30 +155,52 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                 {testMood.emotion.emoji}
               </motion.span>
               <div>
-                <p className="font-semibold text-base sm:text-lg mb-1">{testMood.senderName} ressent...</p>
-                <p className="text-gray-600 font-medium text-sm sm:text-base">{testMood.emotion.name}</p>
+                <p className="font-semibold text-base sm:text-lg mb-1">{testMood.senderName} {currentMusic ? 'partage une musique' : 'ressent...'}</p>
+                <p className="text-gray-600 font-medium text-sm sm:text-base">
+                  {currentMusic ? `${currentMusic.title} - ${currentMusic.artist}` : testMood.emotion.name}
+                </p>
               </div>
             </div>
+
+            {currentMusic && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <button
+                  onClick={togglePlayPause}
+                  className="flex items-center justify-center w-full py-2 px-4 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-lg transition-colors"
+                >
+                  <span className="text-xl mr-2">{isPlaying ? '⏸️' : '▶️'}</span>
+                  <span className="font-medium">{isPlaying ? 'Pause' : 'Écouter'}</span>
+                </button>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row gap-2 mt-3">
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   playSound('click');
-                  // Generate a unique ID for this mood
                   const uniqueId = `mood-${Date.now()}`;
                   setMoodId(uniqueId);
-                  setShowMoodVibeResponse(true);
+                  if (currentMusic) {
+                    setShowMoodMusicResponse(true);
+                  } else {
+                    setShowMoodVibeResponse(true);
+                  }
                 }}
                 className="flex-1 px-4 py-2.5 bg-primary-100 hover:bg-primary-200 text-primary-700 rounded-xl text-sm font-medium transition-colors shadow-sm"
               >
-                Répondre avec MoodVibe 💬
+                {currentMusic ? 'Répondre avec MoodMusic 💬' : 'Répondre avec MoodVibe 💬'}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   playSound('click');
+                  if (audioRef.current) {
+                    audioRef.current.pause();
+                    setIsPlaying(false);
+                  }
                   setShowTestNotification(false);
                 }}
                 className="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-xl text-sm font-medium transition-colors shadow-sm"
@@ -218,7 +284,9 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                         <button
                           key={emoji}
                           onClick={() => setSelectedEmoji(emoji)}
-                          className={`p-2 rounded-lg text-2xl ${selectedEmoji === emoji ? 'bg-primary-100 ring-2 ring-primary-500' : 'hover:bg-gray-100'}`}
+                          className={`p-2 rounded-lg text-2xl ${selectedEmoji === emoji ? 
+                            'bg-primary-100 ring-2 ring-primary-500' : 
+                            'bg-gray-50 hover:bg-gray-100'}`}
                         >
                           {emoji}
                         </button>
@@ -226,24 +294,27 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
                     </div>
                   </div>
                   
-                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+                  <div className="flex justify-end space-x-3">
                     <button
                       onClick={() => setShowResponsePopup(false)}
-                      className="w-full sm:flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors"
                     >
                       Annuler
                     </button>
                     <button
                       onClick={() => {
-                        playSound('success');
+                        playSound('mood-sent');
                         setShowSuccessMessage(true);
                         setTimeout(() => {
-                          setShowSuccessMessage(false);
                           setShowResponsePopup(false);
+                          setShowSuccessMessage(false);
+                          setResponseMessage('');
+                          setSelectedEmoji('');
+                          setCurrentAction('');
                         }, 2000);
                       }}
-                      disabled={!responseMessage.trim()}
-                      className="w-full sm:flex-1 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!selectedEmoji}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${selectedEmoji ? 'bg-primary-500 hover:bg-primary-600 text-white' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                     >
                       Envoyer
                     </button>
@@ -254,31 +325,44 @@ const TestMoodButton: React.FC<TestMoodButtonProps> = ({ emotions, position = 't
           </div>
         )}
       </AnimatePresence>
-      
-      {/* Pulse Animation */}
-      <MoodPulseAnimation 
-        isVisible={showPulseAnimation}
-        onAnimationComplete={() => setShowPulseAnimation(false)}
-      />
 
-      {/* MoodVibeResponse Component Integration */}
-      <AnimatePresence>
-        {showMoodVibeResponse && testMood && (
-          <MoodVibeResponse
-            moodId={moodId}
-            senderName={testMood.senderName}
-            emotion={{
-              name: testMood.emotion.name,
-              emoji: testMood.emotion.emoji
-            }}
-            onRespond={(response) => {
-              console.log('Response sent:', response);
-              // Removed the automatic closing timer to allow users more time to interact
-            }}
-            onClose={() => setShowMoodVibeResponse(false)}
-          />
-        )}
-      </AnimatePresence>
+      {showMoodVibeResponse && testMood && (
+        <MoodVibeResponse
+          moodId={moodId}
+          senderName={testMood.senderName}
+          emotion={testMood.emotion}
+          onClose={() => setShowMoodVibeResponse(false)}
+          onRespond={(response) => {
+            setShowMoodVibeResponse(false);
+            playSound('mood-sent');
+            // In a real app, you would send this response to your backend
+            console.log('Response sent:', response);
+          }}
+        />
+      )}
+
+      {showMoodMusicResponse && testMood && currentMusic && (
+        <MoodMusicResponse
+          moodId={moodId}
+          senderName={testMood.senderName}
+          musicTitle={currentMusic.title}
+          musicArtist={currentMusic.artist}
+          onClose={() => setShowMoodMusicResponse(false)}
+          onRespond={(response) => {
+            setShowMoodMusicResponse(false);
+            playSound('mood-sent');
+            // In a real app, you would send this response to your backend
+            console.log('Music response sent:', response);
+          }}
+        />
+      )}
+
+      {showPulseAnimation && (
+        <MoodPulseAnimation
+          isVisible={showPulseAnimation}
+          onAnimationComplete={() => setShowPulseAnimation(false)}
+        />
+      )}
     </>
   );
 };
